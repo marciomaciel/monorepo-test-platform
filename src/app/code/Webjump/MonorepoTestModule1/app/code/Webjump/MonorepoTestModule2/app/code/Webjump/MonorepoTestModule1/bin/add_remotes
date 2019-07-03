@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+## VARIABLES ##
+REPOS="module-test1 git@github.com:webjump/monorepo-test-module1.git\n
+module-test2 git@github.com:webjump/monorepo-test-module2.git"
+
+REPO_LENGTH=`echo -e ${REPOS} | wc -l`
+
+REPO_ARRAY=(${REPOS})
+
+## FUNCTIONS ##
+function remote_exists() {
+    arg_remote_name=$1
+    FOUND=0
+    for item_remote in `git remote`; do
+      if [[ "${arg_remote_name}" == "${item_remote}" ]]
+        then
+          FOUND=1
+      fi
+    done
+    echo ${FOUND}
+}
+
+COUNTER=0
+while [[ ${COUNTER} -lt ${REPO_LENGTH} ]]; do
+  REPO_NAME_INDEX=$((2*${COUNTER}))
+  REPO_URL_INDEX=$((2*${COUNTER}+1))
+
+  REPO_NAME=${REPO_ARRAY[$REPO_NAME_INDEX]}
+  REPO_URL=${REPO_ARRAY[$REPO_URL_INDEX]}
+
+  REPO_NAME=${REPO_NAME//\\n/}
+  REPO_URL=${REPO_URL//\\n/}
+
+  if [[ `remote_exists "$REPO_NAME"` == "0" ]]
+    then
+      git remote add ${REPO_NAME} ${REPO_URL}
+      echo "[Remote added]: ${REPO_NAME} ${REPO_URL}"
+    else
+      echo "[Already added]: ${REPO_NAME} ${REPO_URL}"
+  fi
+
+  let COUNTER=COUNTER+1
+done
