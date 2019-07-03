@@ -1,0 +1,142 @@
+#!/bin/bash
+
+## CONSTANTS ##
+RELEASE_FOLDER='var/tmp/release'
+
+## FUNCTIONS ##
+function remote_exists() {
+    arg_remote_name=$1
+    FOUND=0
+    for item_remote in `git remote`; do
+      if [[ "${arg_remote_name}" == "${item_remote}" ]]
+        then
+          FOUND=1
+      fi
+    done
+    echo ${FOUND}
+}
+
+function version_exists() {
+    arg_version=$1
+    FOUND=0
+    for item_tag in `git tag -l`; do
+      if [[ "${arg_version}" == "${item_tag}" ]]
+        then
+          FOUND=1
+      fi
+    done
+    echo ${FOUND}
+}
+
+## VALIDATION ##
+
+if [[ -z `command -v jq` ]]
+  then
+    echo "jq command not found. Please run \`apt install jq\`."
+    exit 1
+fi
+
+if [[ -z `command -v sponge` ]]
+  then
+    echo "sponge command not found. Please run \`apt install moreutils\`."
+    exit 1
+fi
+
+if [[ -z "$1" ]]
+  then
+    echo "Please give the remote name as the first argument"
+    exit 1
+fi
+REMOTE_NAME=$1
+
+if [[ -z "$2" ]]
+  then
+    echo "Please give the version name as the second argument"
+    exit 1
+fi
+VERSION=$2
+
+if [[ `remote_exists "$REMOTE_NAME"` == "0" ]]
+  then
+    echo "Given remote name not found"
+    exit 1
+fi
+REMOTE_URL=`git remote get-url ${REMOTE_NAME}`
+
+## CREATE FOLDER ##
+rm -Rf ${RELEASE_FOLDER}
+mkdir -p ${RELEASE_FOLDER}
+git clone ${REMOTE_URL} ${RELEASE_FOLDER};
+
+pushd ${RELEASE_FOLDER}
+  if [[ `version_exists "$VERSION"` == "1" ]]
+    then
+      echo "Given version has already been created"
+      exit 1
+  fi
+
+  git checkout master
+  git branch develop
+  git checkout develop
+popd
+
+PACKAGES=`cat ${RELEASE_FOLDER}/composer.json | jq '.require | to_entries[] | [.key] | .[]'`
+
+for item_package in ${PACKAGES}; do
+  PACKAGE_VERSION=`cat composer.lock | jq ".packages | .[] | select(.name==${item_package}) | .version"`
+  COMMAND_RESULT=$?
+  if [[ ${COMMAND_RESULT} -eq 0 ]]
+    then
+      echo "[Composer.lock found]: ${item_package}=${PACKAGE_VERSION}"
+      PACKAGE_VERSION="${PACKAGE_VERSION%\"}"
+      PACKAGE_VERSION="${PACKAGE_VERSION#\"}"
+      PACKAGE_VERSION_MAJOR=$(awk -F. '{print $1}' <<< ${PACKAGE_VERSION})
+      PACKAGE_VERSION_MINOR=$(awk -F. '{print $2}' <<< ${PACKAGE_VERSION})
+      PACKAGE_VERSION_NEW="\"~${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}\""
+      echo "[Version used]: ${item_package}=${PACKAGE_VERSION_NEW}"
+
+      cat ${RELEASE_FOLDER}/composer.json | jq ".require.${item_package} = ${PACKAGE_VERSION_NEW}" > /dev/null
+      COMMAND_RESULT=$?
+
+      if [[ ${COMMAND_RESULT} -eq 0 ]]
+      then
+        cat ${RELEASE_FOLDER}/composer.json | jq ".require.${item_package} = ${PACKAGE_VERSION_NEW}" | sponge ${RELEASE_FOLDER}/composer.json
+      else
+        echo "jq command failed."
+        exit 1
+      fi
+    else
+      echo "jq command failed."
+      exit 1
+  fi
+
+done
+
+# Set the version
+cat ${RELEASE_FOLDER}/composer.json | jq ".version = \"${VERSION}\"" | sponge ${RELEASE_FOLDER}/composer.json
+
+pushd ${RELEASE_FOLDER}
+  git add -A .
+  git commit -m "Fix versions of packages"
+popd
+
+# Set the repo name in Jenkinsfile
+REPO_NAME=$(awk -F/ '{print $5}' <<< ${REMOTE_URL})
+REPO_NAME=${REPO_NAME%.git}
+
+cp -Rf external_files/* ${RELEASE_FOLDER}/
+sed -i -e "s/__REPO_NAME__/${REPO_NAME}/g" ${RELEASE_FOLDER}/Jenkinsfile
+
+pushd ${RELEASE_FOLDER}
+  git add -A .
+  git commit -m "External files are added"
+popd
+
+pushd ${RELEASE_FOLDER}
+  git tag ${VERSION}
+  git push --tag
+  git checkout -f master
+  git branch -D develop
+popd
+
+rm -Rf ${RELEASE_FOLDER}
