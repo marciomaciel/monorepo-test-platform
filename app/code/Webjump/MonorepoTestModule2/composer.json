@@ -1,0 +1,32 @@
+{
+  "description": "Webjump Monorepo Test Module 2",
+  "license": "Copyright",
+  "name": "webjump/module-monorepo-test-module2",
+  "type": "magento2-module",
+  "authors": [
+    {
+      "email": "contato@webjump.com.br",
+      "name": "Webjump Core Team"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://repo.magento.com/"
+    }
+  ],
+  "scripts": {
+    "test": "phpunit"
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Webjump\\MonorepoTestModule2\\": ""
+    },
+    "config":{
+      "secure-http":false
+    }
+  }
+}
