@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ ! -f ~/monorepo-tools/monorepo_split.sh ]]; then
+  echo "File not found: ~/monorepo-tools/monorepo_split.sh"
+  exit 1
+fi
+
+~/monorepo-tools/monorepo_split.sh \
+    package-category:app/code/Webjump/Category \
+    package-email-logger:app/code/Webjump/EmailLogger \
+    package-payment-notifier:app/code/Webjump/PaymentNotifier \
+    package-sales-review:app/code/Webjump/SalesReview \
+    package-shipping-tracking:app/code/Webjump/ShippingTracking \
+    package-password-validation:app/code/Webjump/PasswordValidation \
+    package-product-best-seller:app/code/Webjump/ProductBestSeller
