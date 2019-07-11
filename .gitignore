@@ -49,5 +49,5 @@ atlassian*
 /nginx.conf.sample
 /package.json.sample
 .DS_Store
-/.idea
+.idea
 /src/.github
