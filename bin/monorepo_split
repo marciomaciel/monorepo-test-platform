@@ -6,10 +6,5 @@ if [[ ! -f ~/monorepo-tools/monorepo_split.sh ]]; then
 fi
 
 ~/monorepo-tools/monorepo_split.sh \
-    package-category:app/code/Webjump/Category \
-    package-email-logger:app/code/Webjump/EmailLogger \
-    package-payment-notifier:app/code/Webjump/PaymentNotifier \
-    package-sales-review:app/code/Webjump/SalesReview \
-    package-shipping-tracking:app/code/Webjump/ShippingTracking \
-    package-password-validation:app/code/Webjump/PasswordValidation \
-    package-product-best-seller:app/code/Webjump/ProductBestSeller
+    module-test1:app/code/Webjump/MonorepoTestModule1 \
+    module-test2:app/code/Webjump/MonorepoTestModule2
