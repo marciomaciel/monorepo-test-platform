@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
 ## VARIABLES ##
-REPOS="package-category ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-category.git\n
-package-email-logger ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-email-logger.git\n
-package-payment-notifier ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-payment-notifier.git\n
-package-sales-review ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-sales-review.git\n
-package-shipping-tracking ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-shipping-tracking.git\n
-package-password-validation ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-password-validation.git\n
-package-product-best-seller ssh://git@52.166.71.39:7999/nhsc/nhs-core-nestle-module-product-best-seller.git"
+REPOS="module-test1 git@github.com:webjump/monorepo-test-module1.git\n
+module-test2 git@github.com:webjump/monorepo-test-module2.git"
 
 REPO_LENGTH=`echo -e ${REPOS} | wc -l`
 
